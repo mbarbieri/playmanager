@@ -1,0 +1,11 @@
+h1. Welcome to Play! Manager!
+
+Play! Manager is a Web-Application (based on the Java Framework Play) for managing Play! Applications. Much like the Tomcat-Manager.
+
+h1. Stuff
+
+"flattr Play! Manager":https://flattr.com/thing/343950/Play-Manager
+
+"svenkubiak // play":http:/play.svenkubiak.de (german)
+
+Follow me: "@svenkubiak":http://twitter.com/svenkubiak (german)
