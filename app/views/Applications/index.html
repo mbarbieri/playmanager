@@ -1,0 +1,32 @@
+#{extends 'main.html' /}
+<h3><a href="@{Applications.deploy()}">Deploy new Application</a> | <a href="@{Applications.index()}">Refresh</a></h3>
+<table>
+	<tr>
+		<th><b>Application name</b></th>
+		<th><b>Status</b></th>
+		<th><b>Started</b></th>
+		<th><b>Actions</b></th>
+	</tr>
+	#{list items:applications, as:'application'}
+		<tr>
+			<td>${application.name}</td>
+			<td>
+				#{if application.running}
+					RUNNING
+				#{/if}	
+				#{else}
+					Not running
+				#{/else}
+			</td>
+			<td>${application.started}</td>			
+			<td>
+				#{if application.running}
+					<a href="@{Applications.stop()}/${application.name}">Stop</a>
+				#{/if}
+				#{else}
+					<a href="@{Applications.start()}/${application.name}">Start</a>
+				#{/else}
+			  	 | <a href="@{Applications.status()}/${application.name}" class="showlog">Status</a> | <a href="@{Applications.showlog()}/${application.name}" class="showlog">Show Log</a> | <a href="@{Applications.redeploy()}/${application.name}">Redeploy</a> | <a href="@{Applications.delete()}/${application.name}" onclick="return confirm('Are you sure you want to delete?')">DELETE</a></td>
+		</tr>
+	#{/list}
+</table>

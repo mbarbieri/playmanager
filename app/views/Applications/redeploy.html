@@ -1,0 +1,11 @@
+#{extends 'main.html' /}
+<h3>Redeploy Application</h3>
+<form action="@{Applications.redeployapp()}" method="POST" enctype="multipart/form-data">
+	<p>
+		<label>ZIP File</label>
+		<input type="file" id="application" name="application" /> <br />
+		<label><input type="checkbox" id="start" name="start" value="1" /> Start after deployment</label> <br />
+		<input type="hidden" id="name" name="name" value="${name}" />
+		<p><input type="submit" value="Redeploy" /></p>
+	</p>
+</form>
