@@ -1,11 +1,41 @@
 h1. Welcome to Play! Manager!
 
-Play! Manager is a Web-Application (based on the Java Framework Play) for managing Play! Applications. Much like the Tomcat-Manager.
+Play! Manager is a Web-Application (based on the Java Play! Framework) for managing Play! Applications. Similar to the Tomcat-Manager, but instead of deploying a .war File you deploy your zipped Play Application. You can start, stop, deploy, redeploy the Applications. Addionally you can access the log file and the status of your Applications.
+
+For me, deploying Play Application is a lot easier now. Instead of zipping, uploading via FTP, unpacking, stopping the old Application, copying the new Application and restarting the new Application, I just upload the .zip file.
+
+h1. Settings
+
+You have to configure the following settings in /conf/application.conf in order to get Play! Manager up and running:
+
+app.playpath=PATH TO PLAY (e.g. D:\\play\\play.bat)
+app.appsdirectory=PATH TO YOUR PLAY APPLICATIONS (e.g. D:\\play-apps\\)
+app.appstempdirectory=PATH TO A TEMP FOLDER (e.g. D:\\play-apps\\tmp\\)
+
+The Application has a HTTP-Basic-Authentication, with the following default values:
+
+Username: play
+Password: manager
+
+It is highly recommend to change those settings, which you find find also in the /conf/application.conf.
+
+h1. Installation
+
+* Download the latest version of Play! Manager
+* Unpack
+* Run @play id@ and set id to @prod@
+* Run @play start@ to start Play! Manager (Make sure that the Terminal you start Play! Manager has administrative rights!)
+
+Play! Manager is now running at http://127.0.0.1:10000
+
+See the Play manual on how to set Play in a more productive environment, like "Setting up a frontal HTTP server":http://www.playframework.org/documentation/1.2.1/guide11
+
+h1. Requirements
+
+Currently Play! Manager only works on Windows. It is tested on Windows 7 (64-bit) and Windows Server 2008. 
 
 h1. Stuff
 
 "flattr Play! Manager":https://flattr.com/thing/343950/Play-Manager
 
 "svenkubiak // play":http:/play.svenkubiak.de (german)
-
-Follow me: "@svenkubiak":http://twitter.com/svenkubiak (german)
