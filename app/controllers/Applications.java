@@ -116,6 +116,9 @@ public class Applications extends Controller {
 	}
 	
 	public static void deployapp (boolean start, String path, File application) {
+		if (application == null)
+			index();
+		
 		String name = application.getName();
 		String fileName = name.substring(0, name.indexOf('.'));
 		String appsir = Play.configuration.getProperty("app.appsdirectory");
@@ -137,6 +140,9 @@ public class Applications extends Controller {
 	}
 	
 	public static void redeployapp(String name, boolean start, boolean keepconf, File application) {
+		if (application == null)
+			index();
+		
 		String tmpdir = Play.configuration.getProperty("app.appstempdirectory");
 		String appsdir = Play.configuration.getProperty("app.appsdirectory");
 		
