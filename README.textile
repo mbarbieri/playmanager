@@ -1,6 +1,6 @@
 h1. Welcome to Play! Manager!
 
-Play! Manager is a Web-Application (based on the Java Play! Framework) for managing Play! Applications. Similar to the Tomcat-Manager, but instead of deploying a .war File you deploy your zipped Play Application. You can start, stop, deploy, redeploy the Applications. Addionally you can access the log file and the status of your Applications.
+Play! Manager is a Web-Application (based on the Java Play! Framework) for managing Play! Applications, similar to the Tomcat-Manager, but instead of deploying a .war File you deploy your zipped Play! Application. You can start, stop, deploy and redeploy your Application. Addionally you can access the log file (system.out) and the current status (play status) of your Application.
 
 For me, deploying Play Application is a lot easier now. Instead of zipping, uploading via FTP, unpacking, stopping the old Application, copying the new Application and restarting the new Application, I just upload the .zip file.
 
@@ -8,16 +8,16 @@ h1. Settings
 
 You have to configure the following settings in /conf/application.conf in order to get Play! Manager up and running:
 
-app.playpath=PATH TO PLAY (e.g. D:\\play\\play.bat)
-app.appsdirectory=PATH TO YOUR PLAY APPLICATIONS (e.g. D:\\play-apps\\)
-app.appstempdirectory=PATH TO A TEMP FOLDER (e.g. D:\\play-apps\\tmp\\)
+@app.playpath=PATH TO PLAY (e.g. D:\\play\\play.bat)@
+@app.appsdirectory=PATH TO YOUR PLAY APPLICATIONS (e.g. D:\\play-apps\\)@
+@app.appstempdirectory=PATH TO A TEMP FOLDER (e.g. D:\\play-apps\\tmp\\)@
 
 The Application has a HTTP-Basic-Authentication, with the following default values:
 
-Username: play
-Password: manager
+@Username: play@
+@Password: manager@
 
-It is highly recommend to change those settings, which you find find also in the /conf/application.conf.
+It is highly recommend to change those values, which you find find also in the /conf/application.conf.
 
 h1. Installation
 
