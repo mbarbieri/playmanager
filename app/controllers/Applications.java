@@ -34,11 +34,11 @@ public class Applications extends Controller {
 		List<Application> applications = new ArrayList(); 
 		
 		File dir = new File(appsdir);
-		if (dir.exists()) {
+		if (dir.exists() && dir.isDirectory()) {
 			List<File> folders = new ArrayList(Arrays.asList(dir.listFiles())); 
 			
 			for (File file : folders) {
-				if (file.isDirectory() && !file.getName().equals("tmp")) {
+				if (file.isDirectory() && !file.getName().equals("tmp") && !file.getName().equals("playmanager")) {
 					Application application = new Application();
 					application.setName(file.getName());
 					applications.add(application);
@@ -136,7 +136,7 @@ public class Applications extends Controller {
 		render(name);
 	}
 	
-	public static void redeployapp(String name, boolean start, File application) {
+	public static void redeployapp(String name, boolean start, boolean keepconf, File application) {
 		String tmpdir = Play.configuration.getProperty("app.appstempdirectory");
 		String appsdir = Play.configuration.getProperty("app.appsdirectory");
 		
@@ -147,11 +147,13 @@ public class Applications extends Controller {
 		File tmp = new File(tmpdir);
 		Files.unzip(application, tmp);
 		
-		//delete conf folder from new application
-		Files.deleteDirectory(new File(tmpdir + name + "/conf"));
+		if (keepconf) {
+			//delete conf folder from new application
+			Files.deleteDirectory(new File(tmpdir + name + "/conf"));
 		
-		//copy folder from old application to tmp dir
-		Files.copyDir(new File(appsdir + name + "/conf"), new File(tmpdir + name + "/conf"));
+			//copy folder from old application to tmp dir
+			Files.copyDir(new File(appsdir + name + "/conf"), new File(tmpdir + name + "/conf"));
+		}
 		
 		//delete old application
         Files.deleteDirectory(new File(appsdir + name));
