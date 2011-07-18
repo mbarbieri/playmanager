@@ -1,20 +1,15 @@
 package controllers;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import models.Application;
-
+import play.Logger;
 import play.Play;
 import play.libs.Files;
-import play.libs.IO;
 import play.mvc.Before;
 import play.mvc.Controller;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Applications extends Controller {
 	
@@ -30,107 +25,80 @@ public class Applications extends Controller {
 	}
 	
 	public static void index () {
-		String appsdir = Play.configuration.getProperty("app.appsdirectory");
-		List<Application> applications = new ArrayList(); 
-		
-		File dir = new File(appsdir);
-		if (dir.exists() && dir.isDirectory()) {
-			List<File> folders = new ArrayList(Arrays.asList(dir.listFiles())); 
-			
-			for (File file : folders) {
-				if (file.isDirectory() && !file.getName().equals("tmp") && !file.getName().equals("playmanager")) {
-					Application application = new Application();
-					application.setName(file.getName());
-					applications.add(application);
-				}
-			}
-		}
-		
+        List<Application> applications = Application.findAll();
 		render(applications);
 	}
 	
 	public static void status (String name) {
-		String playpath = Play.configuration.getProperty("app.playpath");
-		String appsdir = Play.configuration.getProperty("app.appsdirectory");
-		List<String> output = new ArrayList<String>();
 
-		try {
-            Runtime rt = Runtime.getRuntime();
-            Process pr = rt.exec(playpath + " status " + appsdir + name);
+        Application application = Application.find("byName",name).first();
 
-            BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-            String line = null;
-            
-            while ((line = input.readLine()) != null)
-            	output.add(line);
-
-        } catch(Exception e) {
-        	 System.out.println(e.toString());
-        }
+        List<String> output = application.status();
 		
 		render(output);
 	}
 	
 	public static void start (String name) {
-		if (name != null)
-			execute("start", name, "", "");
+
+        Application application = Application.find("byName",name).first();
+		if (application != null)
+            application.start();
 		
 		index();
 	}
 	
 	public static void stop (String name) {
-		if (name != null)
-			execute("stop", name, "", "");
-		
+
+        Application application = Application.find("byName",name).first();
+        if (application != null) {
+            Logger.info("Stopping application %s",application);
+            application.stop();
+        }
+
 		index();
 	}
 	
 	public static void showlog (String name) {
-		List<String> output = new ArrayList();
-		
-		if (name != null) {
-			String appsdir = Play.configuration.getProperty("app.appsdirectory");
-			File file = new File (appsdir + name + "/logs/system.out");
-			if (file.exists())
-				output = IO.readLines(file);
-		}
-		
-		render(output);
-	}	
+
+        List<String> output = new ArrayList();
+        
+        Application application = Application.find("byName",name).first();
+        if (application != null) {
+            output = application.showLog();
+        }
+        render(output);
+	}
 	
 	public static void deploy () {
 		render();
 	}
 	
 	public static void delete (String name) {
-		if (name != null) {
-			execute("stop", name, "", "");
-		
-			String appsdir = Play.configuration.getProperty("app.appsdirectory");
-			File file = new File(appsdir + name);
-			if (file.exists())
-				Files.deleteDirectory(file);
-		}
-		
+        
+        Application application = Application.find("byName",name).first();
+		if (application != null) {
+            application.stop();
+            application.deleteDirectory();
+            application.delete();
+        }
+
 		index();
 	}
 	
-	public static void deployapp (boolean start, String path, File application) {
-		if (application == null)
+	public static void deployapp (boolean start, String path, File applicationFile) {
+		if (applicationFile == null)
 			index();
 		
-		String name = application.getName();
+		String name = applicationFile.getName();
 		String fileName = name.substring(0, name.indexOf('.'));
-		String appsir = Play.configuration.getProperty("app.appsdirectory");
 
-		File target = new File(appsir);
-		if (target.exists())
-			Files.unzip(application, target);	
-		
-		execute("deps", fileName, "--sync", "");
-		
+        Application application = new Application(fileName);
+        application.setup(applicationFile);
+        application.save();
+        application.syncDependencies();
+
 		if (start)
-			execute("start", fileName, "", "");
+			application.start();
 		
 		index();
 	}
@@ -139,19 +107,21 @@ public class Applications extends Controller {
 		render(name);
 	}
 	
-	public static void redeployapp(String name, boolean start, boolean keepconf, File application) {
-		if (application == null)
+	public static void redeployapp(String name, boolean start, boolean keepconf, File applicationFile) {
+		if (applicationFile == null)
 			index();
 		
 		String tmpdir = Play.configuration.getProperty("app.appstempdirectory");
 		String appsdir = Play.configuration.getProperty("app.appsdirectory");
-		
+
+        Application application = Application.find("byName",name).first();
+
 		//stop running application
-		execute("stop", name, "", "");
-		
+		application.stop();
+
 		//unzip new application to tmp folder
 		File tmp = new File(tmpdir);
-		Files.unzip(application, tmp);
+		Files.unzip(applicationFile, tmp);
 		
 		if (keepconf) {
 			//delete conf folder from new application
@@ -162,8 +132,7 @@ public class Applications extends Controller {
 		}
 		
 		//delete old application
-        Files.deleteDirectory(new File(appsdir + name));
-        
+        application.deleteDirectory();
         //copy everything from tmp folder to live folder
         Files.copyDir(new File(tmpdir + name), new File(appsdir + name));
         
@@ -171,22 +140,12 @@ public class Applications extends Controller {
         Files.deleteDirectory(new File(tmpdir + name));
 
         //run dependencies sync
-        execute("deps", name, "--sync", ""); 
+        application.syncDependencies();
         
         if (start)
-        	execute("start", name, "", "");   
+        	application.start();
         
         index();
 	}
 	
-	private static void execute (String command, String name, String postfix, String prefix) {
-		String playpath = Play.configuration.getProperty("app.playpath");
-		String appsdir = Play.configuration.getProperty("app.appsdirectory");
-		
-		try {
-            Runtime.getRuntime().exec(prefix + " " + playpath + " " + command + " " + appsdir + name + " " + postfix);
-        } catch(Exception e) {
-            System.out.println(e.toString());
-        }
-	}	
 }
