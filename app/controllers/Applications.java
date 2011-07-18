@@ -123,7 +123,7 @@ public class Applications extends Controller {
 		String fileName = name.substring(0, name.indexOf('.'));
 		String appsir = Play.configuration.getProperty("app.appsdirectory");
 
-		File target = new File(appsir);
+		File target = new File(appsir + fileName);
 		if (target.exists())
 			Files.unzip(application, target);	
 		
