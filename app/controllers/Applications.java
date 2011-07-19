@@ -42,6 +42,7 @@ public class Applications extends Controller {
 
         Application application = Application.find("byName",name).first();
 		if (application != null)
+            Logger.info("Starting application %s",application);
             application.start();
 		
 		index();
@@ -88,9 +89,10 @@ public class Applications extends Controller {
 	public static void deployapp (boolean start, String path, File applicationFile) {
 		if (applicationFile == null)
 			index();
-		
+
 		String name = applicationFile.getName();
 		String fileName = name.substring(0, name.indexOf('.'));
+        Logger.info("Deploying application %s",fileName);
 
         Application application = new Application(fileName);
         application.setup(applicationFile);

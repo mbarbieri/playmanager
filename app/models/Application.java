@@ -30,14 +30,13 @@ public class Application extends Model {
     }
 
     public boolean isRunning() {
-        String appsdir = Play.configuration.getProperty("app.appsdirectory");
-        File file = new File(appsdir + name + "/server.pid");
+        File file = new File(getApplicationPath() + "/server.pid");
 
         return file.exists();
     }
 
     public String getStarted() {
-        File file = new File(Play.configuration.getProperty("app.appsdirectory") + name + "/server.pid");
+        File file = new File(getApplicationPath() + "/server.pid");
         if (file.exists()) {
             long started = file.lastModified();
 
@@ -51,11 +50,17 @@ public class Application extends Model {
     }
 
     public void setup(File applicationFile) {
-        
+        Logger.debug("Setup application using file: %s", applicationFile.getName());
         String appsdir = Play.configuration.getProperty("app.appsdirectory");
-		File target = new File(appsdir);
-		if (target.exists())
-			Files.unzip(applicationFile, target);
+
+        File slotDirectory = new File(appsdir + name);
+        slotDirectory.mkdir();
+
+        File applicationDirectory = new File(appsdir + name + "/application");
+        applicationDirectory.mkdir();
+
+        if (applicationDirectory.exists())
+            Files.unzip(applicationFile, applicationDirectory);
     }
 
     public List<String> status() {
@@ -63,10 +68,10 @@ public class Application extends Model {
         String appsdir = Play.configuration.getProperty("app.appsdirectory");
 
         List<String> output = new ArrayList<String>();
-        Logger.debug(playpath + " status " + appsdir + name);
+        Logger.debug(playpath + " status " + getApplicationPath());
         try {
             Runtime rt = Runtime.getRuntime();
-            Process pr = rt.exec(playpath + " status " + appsdir + name);
+            Process pr = rt.exec(playpath + " status " + getApplicationPath());
 
             BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
             String line = null;
@@ -89,8 +94,7 @@ public class Application extends Model {
     }
 
     public void deleteDirectory() {
-        String appsdir = Play.configuration.getProperty("app.appsdirectory");
-        File file = new File(appsdir + name);
+        File file = new File(getApplicationPath());
         if (file.exists())
             Files.deleteDirectory(file);
     }
@@ -100,8 +104,7 @@ public class Application extends Model {
     }
 
     public List<String> showLog() {
-        String appsdir = Play.configuration.getProperty("app.appsdirectory");
-        File file = new File(appsdir + name + "/logs/system.out");
+        File file = new File(getApplicationPath() + "/logs/system.out");
         if (file.exists())
             return IO.readLines(file);
         return null;
@@ -109,14 +112,17 @@ public class Application extends Model {
 
     private void execute(String command, String postfix, String prefix) {
         String playpath = Play.configuration.getProperty("app.playpath");
-        String appsdir = Play.configuration.getProperty("app.appsdirectory");
 
         try {
-            Logger.debug(prefix + " " + playpath + " " + command + " " + appsdir + name + " " + postfix);
-            Runtime.getRuntime().exec(prefix + " " + playpath + " " + command + " " + appsdir + name + " " + postfix);
+            Runtime.getRuntime().exec(prefix + " " + playpath + " " + command + " " + getApplicationPath() + postfix);
         } catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
+    }
+
+    private String getApplicationPath() {
+        String appsdir = Play.configuration.getProperty("app.appsdirectory");
+        return appsdir + name + "/application";
     }
 
     private void execute(String command) {
