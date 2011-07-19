@@ -2,3 +2,4 @@
 
 require:
     - play
+    - org.apache.commons -> commons-exec 1.1

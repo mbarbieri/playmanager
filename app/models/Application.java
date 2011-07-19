@@ -1,5 +1,8 @@
 package models;
 
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecuteResultHandler;
+import org.apache.commons.exec.DefaultExecutor;
 import play.Logger;
 import play.Play;
 import play.data.validation.Required;
@@ -10,6 +13,7 @@ import play.libs.IO;
 import javax.persistence.Entity;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -100,7 +104,7 @@ public class Application extends Model {
     }
 
     public void syncDependencies() {
-        execute("deps", "--sync", "");
+        execute("deps", "--sync");
     }
 
     public List<String> showLog() {
@@ -110,12 +114,18 @@ public class Application extends Model {
         return null;
     }
 
-    private void execute(String command, String postfix, String prefix) {
+    private void execute(String command, String postfix) {
         String playpath = Play.configuration.getProperty("app.playpath");
-
+        CommandLine cmd = new CommandLine(playpath);
+        cmd.addArgument(command);
+        cmd.addArgument(getApplicationPath());
+        cmd.addArguments(postfix);
+        DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
+        DefaultExecutor executor = new DefaultExecutor();
         try {
-            Runtime.getRuntime().exec(prefix + " " + playpath + " " + command + " " + getApplicationPath() + postfix);
-        } catch (Exception e) {
+            executor.execute(cmd,resultHandler);
+            Logger.debug("Command: %s", cmd.toString());
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -126,7 +136,7 @@ public class Application extends Model {
     }
 
     private void execute(String command) {
-        execute(command, "", "");
+        execute(command, "");
     }
 
     @Override
