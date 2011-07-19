@@ -94,7 +94,7 @@ public class Application extends Model {
     }
 
     public void stop() {
-        execute("stop");
+        execute("stop",false);
     }
 
     public void deleteDirectory() {
@@ -114,16 +114,21 @@ public class Application extends Model {
         return null;
     }
 
-    private void execute(String command, String postfix) {
+    private void execute(String command, String postfix, boolean async) {
         String playpath = Play.configuration.getProperty("app.playpath");
         CommandLine cmd = new CommandLine(playpath);
         cmd.addArgument(command);
         cmd.addArgument(getApplicationPath());
         cmd.addArguments(postfix);
-        DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
         DefaultExecutor executor = new DefaultExecutor();
         try {
-            executor.execute(cmd,resultHandler);
+            if(async) {
+                DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
+                executor.execute(cmd,resultHandler);
+            }
+            else
+                executor.execute(cmd);
+            
             Logger.debug("Command: %s", cmd.toString());
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,7 +141,15 @@ public class Application extends Model {
     }
 
     private void execute(String command) {
-        execute(command, "");
+        execute(command, "",true);
+    }
+
+    private void execute(String command, boolean async){
+        execute(command,"",async);
+    }
+
+    private void execute(String command, String postfix){
+        execute(command,postfix,true);
     }
 
     @Override
