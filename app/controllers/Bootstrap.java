@@ -1,6 +1,7 @@
 package controllers;
 
 import models.Application;
+import play.Logger;
 import play.Play;
 import play.jobs.Job;
 import play.jobs.OnApplicationStart;
@@ -27,7 +28,13 @@ public class Bootstrap extends Job {
             for (File file : folders) {
                 Application applicationFound = Application.find("byName",file.getName()).first();
                 if (applicationFound == null && file.isDirectory() && !file.getName().equals("tmp") && !file.getName().equals("playmanager")) {
+                    Logger.info("Added application %s",file.getName());
                     Application application = new Application(file.getName());
+                    File gitDirectory = new File(file.getAbsolutePath()+"/application/.git");
+                    if(gitDirectory.exists())
+                        application.deploymentType = Application.GIT;
+                    else
+                        application.deploymentType = Application.ZIP;
                     application.save();
                 }
             }

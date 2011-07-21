@@ -2,9 +2,19 @@
 <h3>Deploy new Application</h3>
 <form action="@{Applications.deployapp()}" method="POST" enctype="multipart/form-data">
 	<p>
-		<label>ZIP File</label>
-		<input type="file" id="application" name="applicationFile" /> <br />
-		<label><input type="checkbox" id="start" name="start" value="1" /> Start after deployment</label> <br />
+        #{select 'deploymentType', value:0, id:'deploymentTypeSelector'}
+            #{option 0}Zip file#{/option}
+            #{option 1}Git repository#{/option}
+        #{/select}
+		<div id="zipDeployment">
+            <label>ZIP File</label>
+		    <input type="file" id="application" name="applicationFile" /> <br />
+		</div>
+        <div id="gitDeployment" style="display: none">
+            <label>Git repository path</label>
+            <input type="text" name="gitPath"/> <br />
+        </div>
+        <label><input type="checkbox" id="start" name="start" value="1" /> Start after deployment</label> <br />
 		<p><input type="submit" value="Deploy" /></p>
 	</p>
 </form>

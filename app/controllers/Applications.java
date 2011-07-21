@@ -1,6 +1,7 @@
 package controllers;
 
 import models.Application;
+import org.apache.commons.lang.StringUtils;
 import play.Logger;
 import play.Play;
 import play.libs.Files;
@@ -42,7 +43,7 @@ public class Applications extends Controller {
 
         Application application = Application.find("byName",name).first();
 		if (application != null)
-            Logger.info("Starting application %s",application);
+            Logger.info("Starting application %s", application);
             application.start();
 		
 		index();
@@ -86,17 +87,30 @@ public class Applications extends Controller {
 		index();
 	}
 	
-	public static void deployapp (boolean start, String path, File applicationFile) {
-		if (applicationFile == null)
-			index();
+	public static void deployapp (boolean start, String path, File applicationFile, int deploymentType, String gitPath) {
+		if (deploymentType == Application.ZIP && applicationFile == null)
+            error("No file uploaded");
+        else if(deploymentType == Application.GIT && StringUtils.isBlank(gitPath))
+            error("Invalid Git path");
 
-		String name = applicationFile.getName();
-		String fileName = name.substring(0, name.indexOf('.'));
-        Logger.info("Deploying application %s",fileName);
+        Application application = new Application();
+        application.deploymentType = deploymentType;
 
-        Application application = new Application(fileName);
-        application.setup(applicationFile);
+        switch(deploymentType) {
+            case Application.ZIP:
+                String name = applicationFile.getName();
+                application.name = name.substring(0, name.indexOf('.'));
+                break;
+            case Application.GIT:
+                application.name = gitPath.substring(gitPath.lastIndexOf("/")+1,gitPath.lastIndexOf("."));
+                break;
+        }
+
         application.save();
+
+        Logger.info("Deploying application %s",application.name);
+        application.setup(applicationFile, gitPath);
+
         application.syncDependencies();
 
 		if (start)

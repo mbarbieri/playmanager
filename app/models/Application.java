@@ -1,19 +1,17 @@
 package models;
 
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecuteResultHandler;
-import org.apache.commons.exec.DefaultExecutor;
 import play.Logger;
 import play.Play;
 import play.data.validation.Required;
 import play.db.jpa.Model;
 import play.libs.Files;
 import play.libs.IO;
+import utils.GitUtils;
+import utils.PlayUtils;
 
 import javax.persistence.Entity;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -25,6 +23,12 @@ public class Application extends Model {
 
     @Required
     public String name;
+
+    @Required
+    public int deploymentType;
+
+    public static final int ZIP = 0;
+    public static final int GIT = 1;
 
     public Application() {
     }
@@ -53,8 +57,10 @@ public class Application extends Model {
         return "-";
     }
 
-    public void setup(File applicationFile) {
-        Logger.debug("Setup application using file: %s", applicationFile.getName());
+    public void setup(File applicationFile, String gitPath) {
+        Logger.debug("Setup application: %s", name);
+
+        // Create directories
         String appsdir = Play.configuration.getProperty("app.appsdirectory");
 
         File slotDirectory = new File(appsdir + name);
@@ -62,9 +68,17 @@ public class Application extends Model {
 
         File applicationDirectory = new File(appsdir + name + "/application");
         applicationDirectory.mkdir();
+        File backupDirectory = new File(appsdir + name + "/backup");
+        backupDirectory.mkdir();
 
-        if (applicationDirectory.exists())
-            Files.unzip(applicationFile, applicationDirectory);
+        switch (deploymentType) {
+            case Application.ZIP:
+                Files.unzip(applicationFile, applicationDirectory);
+                break;
+            case Application.GIT:
+                GitUtils.cloneRepository(gitPath, applicationDirectory);
+                break;
+        }
     }
 
     public List<String> status() {
@@ -90,11 +104,11 @@ public class Application extends Model {
     }
 
     public void start() {
-        execute("start");
+        PlayUtils.start(this);
     }
 
     public void stop() {
-        execute("stop",false);
+        PlayUtils.stop(this);
     }
 
     public void deleteDirectory() {
@@ -104,7 +118,7 @@ public class Application extends Model {
     }
 
     public void syncDependencies() {
-        execute("deps", "--sync");
+        PlayUtils.syncDependencies(this);
     }
 
     public List<String> showLog() {
@@ -115,24 +129,8 @@ public class Application extends Model {
     }
 
     private void execute(String command, String postfix, boolean async) {
-        String playpath = Play.configuration.getProperty("app.playpath");
-        CommandLine cmd = new CommandLine(playpath);
-        cmd.addArgument(command);
-        cmd.addArgument(getApplicationPath());
-        cmd.addArguments(postfix);
-        DefaultExecutor executor = new DefaultExecutor();
-        try {
-            if(async) {
-                DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
-                executor.execute(cmd,resultHandler);
-            }
-            else
-                executor.execute(cmd);
-            
-            Logger.debug("Command: %s", cmd.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        
     }
 
     private String getApplicationPath() {
